@@ -14,13 +14,16 @@ Marketplace page fetches to let users browse, install, and uninstall plugins.
 ```
 biocraft-marketplace/
 ├── README.md
+├── wrangler.jsonc            # Cloudflare Workers config (assets → public/)
 ├── beautiful-creatures.txt   # curated allowlist (one plugin name per line)
 ├── plugins/
 │   └── <name>/
 │       └── <name>.plugin.yaml
 ├── scripts/
-│   └── build_index.py        # generates index.json
-└── index.json                # generated catalog (served by CF Pages)
+│   └── build_index.py        # generates public/index.json + copies plugins/
+└── public/                   # build output (gitignored), served as static assets
+    ├── index.json            # generated catalog
+    └── plugins/              # copied manifests
 ```
 
 ## `index.json` contract
@@ -60,8 +63,17 @@ Override the public base URL (e.g. for a preview deployment) with:
 MARKETPLACE_BASE_URL=https://example.com python scripts/build_index.py
 ```
 
-## Cloudflare Pages configuration
+## Cloudflare deployment
+
+This registry deploys as a static-assets Worker via Cloudflare Workers Builds.
 
 - **Build command:** `pip install pyyaml && python scripts/build_index.py`
-- **Build output directory:** `.` (the root serves `index.json` + `plugins/`)
+- **Deploy command:** `npx wrangler deploy`
+- **Assets directory:** `public/` (declared in `wrangler.jsonc`) — only the
+  generated `index.json` and copied `plugins/` manifests are served; source
+  scripts and repo metadata are never uploaded.
 - **Production domain:** `https://biocraft-marketplace.pages.dev`
+
+`wrangler.jsonc` explicitly sets `assets.directory` so wrangler does not rely on
+auto-detection (which requires html/css/js and fails for a JSON+YAML-only
+registry).
