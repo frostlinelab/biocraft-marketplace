@@ -1,0 +1,4 @@
+# Beautiful Creatures — curated plugin allowlist
+# 每行一个 plugin name（与 plugin YAML 的 name 字段一致）
+# 进入此文件 = 代码已审过 = Beautiful Creatures 精选
+fastqc

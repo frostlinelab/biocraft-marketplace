@@ -1,0 +1,53 @@
+# Official plugin: FastQC
+# First-party example of a single-block Biocraft plugin.
+# Docs: docs/plugin-authoring.md
+
+name: fastqc
+version: "1.0.0"
+description: Quality control for high-throughput sequencing reads
+icon: microscope
+
+blocks:
+  - name: run-fastqc
+    label: FastQC
+    description: Run FastQC quality control on sequencing reads (FASTQ / FASTQ.GZ)
+    icon: beaker
+
+    runtime:
+      # BioContainers FastQC — reads from /data/input, writes to /data/output
+      image: biocontainers/fastqc:v0.11.9_cv8
+      # Shell form so globs expand (Docker exec form does not expand *).
+      # Biocraft mounts only pattern-matched files into /data/input.
+      command:
+        - "sh"
+        - "-c"
+        - "fastqc -q -o /data/output -t ${params.threads} /data/input/*"
+      resources:
+        min_threads: 1
+        min_memory_gb: 1.0
+
+    inputs:
+      - name: reads
+        label: Sequencing Reads
+        type: file
+        # Covers .fastq / .fastq.gz (and similarly named variants)
+        pattern: "*.fastq*"
+        multiple: true
+
+    outputs:
+      - name: report
+        label: QC Report
+        type: file
+        pattern: "*_fastqc.html"
+      - name: data
+        label: QC Data
+        type: file
+        pattern: "*_fastqc.zip"
+
+    params:
+      - name: threads
+        label: Threads
+        type: integer
+        default: 2
+        min: 1
+        max: 32
