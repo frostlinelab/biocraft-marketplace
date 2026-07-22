@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
-"""Build the marketplace catalog into public/ for Cloudflare deployment.
+"""Build index.json for the biocraft marketplace registry.
 
 Scans plugins/**/*.plugin.yaml, computes sha256, reads the curated allowlist
-(beautiful-creatures.txt), copies the plugin manifests into public/, and writes
-a pretty-printed public/index.json. The public/ directory is the wrangler
-assets directory (see wrangler.jsonc), so only the catalog and manifests are
-served — never the source scripts or repo metadata.
+(beautiful-creatures.txt), and writes a pretty-printed index.json at the repo
+root. Designed to run as the Cloudflare Pages build command.
 """
 import hashlib
 import json
 import os
-import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,8 +17,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 PLUGINS_DIR = ROOT / "plugins"
 CURATED_FILE = ROOT / "beautiful-creatures.txt"
-PUBLIC_DIR = ROOT / "public"
-INDEX_FILE = PUBLIC_DIR / "index.json"
+INDEX_FILE = ROOT / "index.json"
 DEFAULT_BASE = "https://biocraft-marketplace.pages.dev"
 
 
@@ -68,25 +64,10 @@ def _scan(base: str, curated: set[str]) -> list[dict]:
     return plugins
 
 
-def _prepare_public() -> None:
-    """Recreate public/ from scratch and copy the plugin manifests into it.
-
-    A clean rebuild avoids stale manifests lingering after a plugin is removed.
-    Only the catalog (index.json) and plugin YAMLs land here — everything under
-    public/ is uploaded as static assets by wrangler.
-    """
-    if PUBLIC_DIR.exists():
-        shutil.rmtree(PUBLIC_DIR)
-    PUBLIC_DIR.mkdir(parents=True)
-    if PLUGINS_DIR.exists():
-        shutil.copytree(PLUGINS_DIR, PUBLIC_DIR / "plugins")
-
-
 def main() -> int:
     base = os.environ.get("MARKETPLACE_BASE_URL", DEFAULT_BASE).rstrip("/")
     curated = _load_curated()
     plugins = _scan(base, curated)
-    _prepare_public()
     index = {
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
