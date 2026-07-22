@@ -63,8 +63,9 @@ MARKETPLACE_BASE_URL=https://example.com python scripts/build_index.py
 ## Cloudflare Pages deployment
 
 - **Build command:** `pip install pyyaml && python scripts/build_index.py`
-- **Build output directory:** `.` (the repo root serves `index.json` + `plugins/`)
+- **Build output directory:** `public/` (only the catalog + manifests are served)
 - **Production domain:** `https://biocraft-marketplace.pages.dev`
 
-Pages serves the generated `index.json` and the `plugins/` manifests directly
-from the root — no framework or HTML required.
+`build_index.py` emits into a clean `public/` directory so source scripts and
+repo metadata are never uploaded as static assets. Pages serves `public/` as the
+root, so URLs are `/index.json` and `/plugins/<name>/<name>.plugin.yaml`.
