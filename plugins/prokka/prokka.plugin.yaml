@@ -1,0 +1,136 @@
+# Official plugin: Prokka
+# Rapid annotation of prokaryotic genomes (Bacteria / Archaea).
+# Docs: docs/plugin-authoring.md
+#
+# Param substitution is plain string replacement of ${params.xxx} tokens
+# (see biocraft_core/plugin/resolver.py). Shell parameter expansion such as
+# ${var:+word} does NOT work, and booleans render via str(bool) as "True" /
+# "False" (capitalised), so flags are toggled with case statements that
+# accept any truthy spelling (True/true/TRUE/1). With resources.min_threads set,
+# Biocraft fans out one container per input assembly — each instance sees a
+# single file under /data/input, so `prokka ... /data/input/*` annotates one
+# genome per instance and the derived output prefix stays unique per file.
+
+name: prokka
+version: "1.0.0"
+description: Rapid annotation of prokaryotic genomes (bacteria & archaea)
+icon: dna
+
+blocks:
+  - name: annotate
+    label: Prokka
+    description: Annotate a bacterial/archaeal genome assembly (FASTA contigs)
+    icon: dna
+
+    runtime:
+      # BioContainers Prokka — reads from /data/input, writes to /data/output.
+      image: biocontainers/prokka:1.14.6
+      # Shell form so the /data/input/* glob expands and boolean flags can be
+      # toggled conditionally. prokka derives the output filename prefix from
+      # the input file stem, so fan-out instances never collide.
+      command:
+        - "sh"
+        - "-c"
+        - |
+          set -e
+          ARGS="--outdir /data/output --cpus ${params.cpus} --kingdom ${params.kingdom} --gcode ${params.gcode} --mincontig ${params.mincontig}"
+          case "${params.compliant}" in [Tt]rue|TRUE|1) ARGS="$ARGS --compliant";; esac
+          case "${params.addgenes}"  in [Tt]rue|TRUE|1) ARGS="$ARGS --addgenes";;  esac
+          [ -n "${params.genus}" ]   && ARGS="$ARGS --genus ${params.genus}"
+          [ -n "${params.species}" ] && ARGS="$ARGS --species ${params.species}"
+          [ -n "${params.strain}" ]  && ARGS="$ARGS --strain ${params.strain}"
+          [ -n "${params.centre}" ]  && ARGS="$ARGS --centre ${params.centre}"
+          prokka $ARGS /data/input/*
+      resources:
+        min_threads: 2
+        min_memory_gb: 2.0
+
+    inputs:
+      - name: contigs
+        label: Assembly Contigs (FASTA)
+        type: file
+        # Nucleotide assembly contigs (.fna is the canonical extension).
+        pattern: "*.fna"
+        multiple: true
+
+    outputs:
+      - name: gff
+        label: Annotation (GFF3)
+        type: file
+        pattern: "*.gff"
+      - name: gbk
+        label: GenBank
+        type: file
+        pattern: "*.gbk"
+      - name: faa
+        label: Proteins (FASTA)
+        type: file
+        pattern: "*.faa"
+      - name: ffn
+        label: CDS Nucleotides (FASTA)
+        type: file
+        pattern: "*.ffn"
+      - name: tsv
+        label: Feature Table (TSV)
+        type: file
+        pattern: "*.tsv"
+      - name: stats
+        label: Statistics
+        type: file
+        pattern: "*.txt"
+
+    params:
+      - name: kingdom
+        label: Kingdom
+        type: select
+        default: "Bacteria"
+        options: ["Bacteria", "Archaea", "Eukaryota", "Viruses", "Mitochondrial"]
+      - name: gcode
+        label: Genetic Code
+        type: integer
+        # Translation table: 11 for Bacteria/Archaea (Prokka default),
+        # 1 for Eukaryota/Viruses, 4 for Mitochondrial. Match to kingdom.
+        default: 11
+        min: 1
+        max: 31
+      - name: cpus
+        label: CPUs
+        type: integer
+        default: 2
+        min: 1
+        max: 64
+      - name: mincontig
+        label: Min Contig Length
+        type: integer
+        default: 200
+        min: 1
+        max: 100000
+      - name: genus
+        label: Genus
+        type: string
+        # Single word, e.g. "Escherichia". Leave empty to skip.
+        default: ""
+      - name: species
+        label: Species
+        type: string
+        # Single word (specific epithet), e.g. "coli". Leave empty to skip.
+        default: ""
+      - name: strain
+        label: Strain
+        type: string
+        # Single word. Leave empty to skip.
+        default: ""
+      - name: centre
+        label: Sequencing Centre
+        type: string
+        # Required for --compliant submissions (short, e.g. "CNGB").
+        default: ""
+      - name: compliant
+        label: GenBank/ENA Compliant
+        type: boolean
+        default: false
+      - name: addgenes
+        label: Add gene Features
+        type: boolean
+        # Adds a gene feature spanning each CDS (useful for downstream viewers).
+        default: false
