@@ -1,6 +1,6 @@
 # biocraft-marketplace
 
-Plugin registry for [biocraft-spark](https://github.com/deciduous/biocraft-spark),
+Plugin registry for [biocraft-spark](https://github.com/frostlinelab/biocraft-spark),
 statically hosted on **Cloudflare Pages**. Each plugin is a `.plugin.yaml`
 manifest; this repo publishes an `index.json` catalog that biocraft-spark's
 Marketplace page fetches to let users browse, install, and uninstall plugins.
