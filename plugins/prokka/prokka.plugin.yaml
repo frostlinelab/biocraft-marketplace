@@ -23,8 +23,11 @@ blocks:
     icon: dna
 
     runtime:
-      # BioContainers Prokka — reads from /data/input, writes to /data/output.
-      image: biocontainers/prokka:1.14.6
+      # Prokka 1.14.6 — reads from /data/input, writes to /data/output.
+      # staphb/prokka is a well-maintained Docker Hub image (the biocontainers/
+      # prokka name on Docker Hub is unavailable; quay.io tags are too fragile
+      # to rely on for a first-party plugin).
+      image: staphb/prokka:1.14.6
       # Shell form so the /data/input/* glob expands and boolean flags can be
       # toggled conditionally. prokka derives the output filename prefix from
       # the input file stem, so fan-out instances never collide.
@@ -33,7 +36,7 @@ blocks:
         - "-c"
         - |
           set -e
-          ARGS="--outdir /data/output --cpus ${params.cpus} --kingdom ${params.kingdom} --gcode ${params.gcode} --mincontig ${params.mincontig}"
+          ARGS="--force --outdir /data/output --cpus ${params.cpus} --kingdom ${params.kingdom} --gcode ${params.gcode} --mincontig ${params.mincontig}"
           case "${params.compliant}" in [Tt]rue|TRUE|1) ARGS="$ARGS --compliant";; esac
           case "${params.addgenes}"  in [Tt]rue|TRUE|1) ARGS="$ARGS --addgenes";;  esac
           [ -n "${params.genus}" ]   && ARGS="$ARGS --genus ${params.genus}"
@@ -49,8 +52,9 @@ blocks:
       - name: contigs
         label: Assembly Contigs (FASTA)
         type: file
-        # Nucleotide assembly contigs (.fna is the canonical extension).
-        pattern: "*.fna"
+        # Prokka accepts any FASTA nucleotide file: .fna, .fasta, .fa (also .gz).
+        # Pattern follows the *.fastq* convention used by the FastQC plugin.
+        pattern: "*.fna*"
         multiple: true
 
     outputs:
