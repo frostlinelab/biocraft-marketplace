@@ -1,5 +1,9 @@
 # biocraft-marketplace
 
+<p align="center">
+  <a href="https://frostlinelab.pages.dev"><img src="https://raw.githubusercontent.com/frostlinelab/.github/main/site/assets/banners/biocraft-marketplace.svg" alt="Biocraft Marketplace — a Frostline Lab project" width="820"></a>
+</p>
+
 Plugin registry for [biocraft-spark](https://github.com/frostlinelab/biocraft-spark),
 statically hosted on **Cloudflare Pages**. Each plugin is a `.plugin.yaml`
 manifest; this repo publishes an `index.json` catalog that biocraft-spark's
@@ -69,3 +73,8 @@ MARKETPLACE_BASE_URL=https://example.com python scripts/build_index.py
 `build_index.py` emits into a clean `public/` directory so source scripts and
 repo metadata are never uploaded as static assets. Pages serves `public/` as the
 root, so URLs are `/index.json` and `/plugins/<name>/<name>.plugin.yaml`.
+
+<p align="center">
+  <a href="https://frostlinelab.pages.dev"><img src="https://raw.githubusercontent.com/frostlinelab/.github/main/site/assets/logos/biocraft-marketplace.svg" alt="" width="28" height="28"></a><br>
+  <sub>Part of <a href="https://frostlinelab.pages.dev">Frostline Lab</a> · <a href="https://frostlinelab.pages.dev/gallery.html#biocraft-marketplace">All projects</a></sub>
+</p>
